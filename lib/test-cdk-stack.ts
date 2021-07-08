@@ -3,6 +3,7 @@ import * as pipelines from '@aws-cdk/pipelines';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as s3 from '@aws-cdk/aws-s3';
+import * as iam from '@aws-cdk/aws-iam';
 
 class MyStage extends cdk.Stage {
 
@@ -11,10 +12,16 @@ class MyStage extends cdk.Stage {
     
     const stack = new cdk.Stack(this, 'MyStack');
 
-    new s3.Bucket(stack, 'MyBucket', {
+    const bucket = new s3.Bucket(stack, 'MyBucket', {
       autoDeleteObjects: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+
+    bucket.addToResourcePolicy(new iam.PolicyStatement({
+      principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
+      actions: ['cloudformation:DescribeStacks'],
+      resources: ['*'],
+    }));
   }
 }
 export class TestCdkStack extends cdk.Stack {
