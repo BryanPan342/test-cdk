@@ -15,7 +15,7 @@ class MyStage extends Stage {
 
     const topic = new sns.Topic(stack, 'Topic');
 
-    topic.grantPublish(new iam.AnyPrincipal());
+    topic.grantPublish(new iam.ArnPrincipal(topic.topicArn));
   }
 }
 
