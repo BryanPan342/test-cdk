@@ -1,30 +1,36 @@
-import * as cdk from '@aws-cdk/core';
+import { Construct, SecretValue, Stack, StackProps, Stage, StageProps } from '@aws-cdk/core';
 import * as pipelines from '@aws-cdk/pipelines';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
-import * as s3 from '@aws-cdk/aws-s3';
+import * as sns from '@aws-cdk/aws-sns';
 import * as iam from '@aws-cdk/aws-iam';
 
-class MyStage extends cdk.Stage {
 
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StageProps) {
+class MyStage extends Stage {
+
+  constructor(scope: Construct, id: string, props?: StageProps) {
     super(scope, id, props);
-    
-    const stack = new cdk.Stack(this, 'MyStack');
 
-    const bucket = new s3.Bucket(stack, 'MyBucket', {
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-    });
+    const stack = new Stack(this, 'MyStack');
 
-    bucket.addToResourcePolicy(new iam.PolicyStatement({
-      principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
-      actions: ['s3:DeleteBucket'],
-      resources: ['*'],
-    }));
+    const topic = new sns.Topic(stack, 'Topic');
+
+    topic.grantPublish(new iam.AnyPrincipal());
   }
 }
-export class TestCdkStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+
+class MySafeStage extends Stage {
+
+  constructor(scope: Construct, id: string, props?: StageProps) {
+    super(scope, id, props);
+
+    const stack = new Stack(this, 'MySafeStack');
+
+    new sns.Topic(stack, 'MySafeTopic');
+  }
+}
+export class TestCdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     // The code that defines your stack goes here
@@ -37,7 +43,7 @@ export class TestCdkStack extends cdk.Stack {
       sourceAction: new codepipeline_actions.GitHubSourceAction({
         actionName: 'GitHub',
         output: sourceArtifact,
-        oauthToken: cdk.SecretValue.secretsManager('github-token'),
+        oauthToken: SecretValue.secretsManager('github-token'),
         owner: 'BryanPan342',
         repo: 'test-cdk',
         branch: 'main',
@@ -49,8 +55,12 @@ export class TestCdkStack extends cdk.Stack {
       }),
     });
 
-    pipeline.addApplicationStage(new MyStage(this, 'PreProduction', {
+    const stage1 = pipeline.addApplicationStage(new MyStage(this, 'PreProduction', {
       env: { account: this.account, region: this.region },
-    }))
+    }));
+
+    stage1.addApplication(new MySafeStage(this, 'SafeProduction', {
+      env: { account: this.account, region: this.region },
+    }));
   }
 }
