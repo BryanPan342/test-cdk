@@ -18,7 +18,7 @@ class MyStage extends cdk.Stage {
 
     bucket.addToResourcePolicy(new iam.PolicyStatement({
       principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
-      actions: ['cloudformation:DescribeStacks'],
+      actions: ['s3:DeleteBucket'],
       resources: ['*'],
     }));
   }
