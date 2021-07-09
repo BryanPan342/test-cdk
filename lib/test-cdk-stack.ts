@@ -62,5 +62,17 @@ export class TestCdkStack extends Stack {
     stage1.addApplication(new MySafeStage(this, 'SafeProduction', {
       env: { account: this.account, region: this.region },
     }));
+
+    stage1.addApplication(new MySafeStage(this, 'DisableSecurityCheck', {
+      env: { account: this.account, region: this.region },
+    }));
+
+    const stage2 = pipeline.addApplicationStage(new MyStage(this, 'NoSecurityCheck', {
+      env: { account: this.account, region: this.region },
+    }));
+
+    stage2.addApplication(new MyStage(this, 'EnableSecurityCheck', {
+      env: { account: this.account, region: this.region },
+    }));
   }
 }
