@@ -11,7 +11,9 @@ class MyStage extends Stage {
   constructor(scope: Construct, id: string, props?: StageProps) {
     super(scope, id, props);
 
-    const stack = new Stack(this, 'MyStack');
+    const stack = new Stack(this, 'MyStack', {
+      env: props?.env,
+    });
 
     const topic = new sns.Topic(stack, 'Topic');
 
@@ -19,16 +21,6 @@ class MyStage extends Stage {
   }
 }
 
-class MySafeStage extends Stage {
-
-  constructor(scope: Construct, id: string, props?: StageProps) {
-    super(scope, id, props);
-
-    const stack = new Stack(this, 'MySafeStack');
-
-    new sns.Topic(stack, 'MySafeTopic');
-  }
-}
 export class TestCdkStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
@@ -55,23 +47,7 @@ export class TestCdkStack extends Stack {
       }),
     });
 
-    const stage1 = pipeline.addApplicationStage(new MyStage(this, 'PreProduction', {
-      env: { account: this.account, region: this.region },
-    }));
-
-    stage1.addApplication(new MySafeStage(this, 'SafeProduction', {
-      env: { account: this.account, region: this.region },
-    }));
-
-    stage1.addApplication(new MySafeStage(this, 'DisableSecurityCheck', {
-      env: { account: this.account, region: this.region },
-    }));
-
-    const stage2 = pipeline.addApplicationStage(new MyStage(this, 'NoSecurityCheck', {
-      env: { account: this.account, region: this.region },
-    }));
-
-    stage2.addApplication(new MyStage(this, 'EnableSecurityCheck', {
+    pipeline.addApplicationStage(new MyStage(this, 'PreProduction', {
       env: { account: this.account, region: this.region },
     }));
   }
