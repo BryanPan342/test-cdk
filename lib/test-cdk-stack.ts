@@ -3,6 +3,7 @@ import * as pipelines from '@aws-cdk/pipelines';
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as sns from '@aws-cdk/aws-sns';
+import * as subscriptions from '@aws-cdk/aws-sns-subscriptions';
 import * as iam from '@aws-cdk/aws-iam';
 
 
@@ -54,6 +55,13 @@ export class TestCdkStack extends Stack {
         buildCommand: 'yarn build',
       }),
     });
+
+    const notifications = new sns.Topic(this, 'Notify');
+    notifications.addSubscription(new subscriptions.EmailSubscription('bryanpan342@gmail.com'));
+
+    pipeline.addApplicationStage(new MyStage(this, 'SingleStage', {
+      env: { account: this.account, region: this.region },
+    }));
 
     const stage1 = pipeline.addApplicationStage(new MyStage(this, 'PreProduction', {
       env: { account: this.account, region: this.region },
