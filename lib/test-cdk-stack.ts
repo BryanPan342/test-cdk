@@ -12,11 +12,13 @@ class MyStage extends Stage {
   constructor(scope: Construct, id: string, props?: StageProps) {
     super(scope, id, props);
 
-    const stack = new Stack(this, 'MyStack');
+    const stack = new Stack(this, 'MyStack', {
+      env: props?.env,
+    });
 
     const topic = new sns.Topic(stack, 'Topic');
 
-    topic.grantPublish(new iam.ArnPrincipal(topic.topicArn));
+    topic.grantPublish(new iam.AccountPrincipal(stack.account));
   }
 }
 
@@ -25,7 +27,9 @@ class MySafeStage extends Stage {
   constructor(scope: Construct, id: string, props?: StageProps) {
     super(scope, id, props);
 
-    const stack = new Stack(this, 'MySafeStack');
+    const stack = new Stack(this, 'MySafeStack', {
+      env: props?.env,
+    });
 
     new sns.Topic(stack, 'MySafeTopic');
   }
