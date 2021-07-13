@@ -60,10 +60,24 @@ export class TestCdkStack extends Stack {
       }),
     });
 
-    const notifications = new sns.Topic(this, 'Notify');
-    notifications.addSubscription(new subscriptions.EmailSubscription('bryanpan342@gmail.com'));
+    const pipelineStage = pipeline.codePipeline.addStage({
+      stageName: 'UnattachedStage',
+    });
 
-    pipeline.addApplicationStage(new MyStage(this, 'SingleStage', {
+    const unattachedStage = new pipelines.CdkStage(this, 'UnattachedStage', {
+      stageName: 'UnattachedStage',
+      pipelineStage,
+      cloudAssemblyArtifact,
+      host: {
+        publishAsset: () => undefined,
+        stackOutputArtifact: () => undefined,
+      },
+    });
+
+    const topic = new sns.Topic(this, 'SecurityChangesTopic');
+    topic.addSubscription(new subscriptions.EmailSubscription('test@email.com'));
+
+    unattachedStage.addApplication(new MyStage(this, 'SingleStage', {
       env: { account: this.account, region: this.region },
     }));
 
